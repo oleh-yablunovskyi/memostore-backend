@@ -2,11 +2,13 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { SeedModule } from './seed/seed.module';
 import { QuestionsModule } from './questions/questions.module';
 import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
+    SeedModule,
     QuestionsModule,
     CategoriesModule,
     TypeOrmModule.forRoot({
