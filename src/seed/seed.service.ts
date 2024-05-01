@@ -13,7 +13,7 @@ export class SeedService {
     private readonly questionRepository: Repository<Question>,
   ) {}
 
-  async seedCategories() {
+  async createOtherCategory() {
     // Check if the 'Other' category already exists
     const existingOtherCategory = await this.categoryRepository.findOne({ where: { name: 'Other' } });
 
