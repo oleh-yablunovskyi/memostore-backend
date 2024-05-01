@@ -33,7 +33,10 @@ export class SeedService {
 
   async assignQuestionsToOtherCategory(otherCategory: Category) {
     // Find all questions that do not belong to any category
-    const questionsWithoutCategory = await this.questionRepository.find({ where: { categories: [] } });
+    const questionsWithoutCategory = await this.questionRepository.createQueryBuilder('question')
+    .leftJoin('question.categories', 'category')
+    .where('category.id IS NULL')
+    .getMany();
 
     // Assign these questions to the 'Other' category
     for (const question of questionsWithoutCategory) {
