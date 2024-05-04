@@ -5,7 +5,7 @@ import { Category } from '../categories/entities/category.entity';
 import { Question } from '../questions/entities/question.entity';
 
 @Injectable()
-export class SeedService {
+export class DatabaseManagementService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
@@ -43,4 +43,25 @@ export class SeedService {
 
     console.log(`Assigned ${questionsWithoutCategory.length} questions to the "Other" category`);
   }
+
+  async clearData() {
+    // Delete all questions first to avoid foreign key constraint issues
+    await this.questionRepository.delete({});
+    console.log('Deleted all questions');
+
+    // Delete all categories
+    await this.categoryRepository.delete({});
+    console.log('Deleted all categories');
+  }
+
+  async resetSequences() {
+    // Reset sequence for categories
+    await this.categoryRepository.query(`ALTER SEQUENCE category_id_seq RESTART WITH 1`);
+    console.log('Category ID sequence reset');
+  
+    // Reset sequence for questions
+    await this.questionRepository.query(`ALTER SEQUENCE question_id_seq RESTART WITH 1`);
+    console.log('Question ID sequence reset');
+  }
+
 }
