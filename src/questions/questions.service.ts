@@ -31,16 +31,41 @@ export class QuestionsService {
   }
 
   async create(createQuestionDto: CreateQuestionDto): Promise<Question> {
-    const newQuestion = this.questionRepository.create(createQuestionDto);
+    const category = await this.categoryRepository.findOne({ where: { id: createQuestionDto.categoryId } });
+    if (!category) {
+      throw new NotFoundException(`Category with ID ${createQuestionDto.categoryId} not found`);
+    }
+
+    const newQuestion = this.questionRepository.create({
+      title: createQuestionDto.title,
+      content: createQuestionDto.content,
+      category: category,
+    });
+
     return this.questionRepository.save(newQuestion);
   }
 
   async update(id: number, updateQuestionDto: UpdateQuestionDto): Promise<Question> {
-    const question = await this.questionRepository.findOne({ where: { id } });
+    const question = await this.questionRepository.findOne({ where: { id }, relations: ['category'] });
     if (!question) {
       throw new NotFoundException(`No question found with ID ${id}`);
     }
-    Object.assign(question, updateQuestionDto);
+
+    const { categoryId, ...fieldsToUpdate } = updateQuestionDto;
+
+    // Update the category if categoryId is provided in the DTO
+    if (categoryId) {
+      const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
+
+      if (!category) {
+        throw new NotFoundException(`Category with ID ${categoryId} not found`);
+      }
+
+      question.category = category;
+    }
+
+    Object.assign(question, fieldsToUpdate);
+
     return this.questionRepository.save(question);
   }
 
