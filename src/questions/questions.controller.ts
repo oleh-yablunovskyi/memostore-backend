@@ -33,4 +33,9 @@ export class QuestionsController {
   async remove(@Param('id') id: number): Promise<void> {
     await this.questionsService.remove(id);
   }
+
+  @Get('/category/:categoryId')
+  async findByCategory(@Param('categoryId') categoryId: number): Promise<Question[]> {
+      return this.questionsService.findByCategory(categoryId);
+  }
 }

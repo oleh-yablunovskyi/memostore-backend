@@ -76,4 +76,16 @@ export class QuestionsService {
       throw new NotFoundException(`Question with ID ${id} does not exist`);
     }
   }
+
+  async findByCategory(categoryId: number): Promise<Question[]> {
+    const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
+    if (!category) {
+        throw new NotFoundException(`Category with ID ${categoryId} not found`);
+    }
+
+    return this.questionRepository.find({
+        where: { category: { id: categoryId } },
+        relations: ['category'],
+    });
+  }
 }
