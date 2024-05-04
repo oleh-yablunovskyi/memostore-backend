@@ -11,13 +11,13 @@ export class QuestionsService {
   ) {}
 
   async findAll(): Promise<Question[]> {
-    return this.questionRepository.find({ relations: ['categories'] });
+    return this.questionRepository.find({ relations: ['category'] });
   }
 
   async findOne(id: number): Promise<Question> {
     const question = await this.questionRepository.findOne({
       where: { id },
-      relations: ['categories'],
+      relations: ['category'],
     });
     if (!question) {
       throw new NotFoundException(`Question with ID ${id} not found`);
