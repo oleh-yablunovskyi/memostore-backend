@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Body, Param, Patch, Delete, HttpCode, HttpStatus } from '@nestjs/common';
 import { QuestionsService } from './questions.service';
 import { Question } from './entities/question.entity';
+import { CreateQuestionDto } from './dto/create-question.dto';
+import { UpdateQuestionDto } from './dto/update-question.dto';
 
 @Controller('questions')
 export class QuestionsController {
@@ -17,12 +19,12 @@ export class QuestionsController {
   }
 
   @Post()
-  async create(@Body() questionData: Omit<Question, 'id'>): Promise<Question> {
-    return this.questionsService.create(questionData);
+  async create(@Body() createQuestionDto: CreateQuestionDto): Promise<Question> {
+    return this.questionsService.create(createQuestionDto);
   }
 
   @Patch(':id')
-  async update(@Param('id') id: number, @Body() updateQuestionDto: Partial<Question>): Promise<Question> {
+  async update(@Param('id') id: number, @Body() updateQuestionDto: UpdateQuestionDto): Promise<Question> {
     return this.questionsService.update(id, updateQuestionDto);
   }
 

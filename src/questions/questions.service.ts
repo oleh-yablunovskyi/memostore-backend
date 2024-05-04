@@ -2,12 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Question } from './entities/question.entity';
+import { Category } from '../categories/entities/category.entity';
+import { CreateQuestionDto } from './dto/create-question.dto';
+import { UpdateQuestionDto } from './dto/update-question.dto';
 
 @Injectable()
 export class QuestionsService {
   constructor(
     @InjectRepository(Question)
     private questionRepository: Repository<Question>,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
   ) {}
 
   async findAll(): Promise<Question[]> {
@@ -25,12 +30,12 @@ export class QuestionsService {
     return question;
   }
 
-  async create(questionData: Omit<Question, 'id'>): Promise<Question> {
-    const newQuestion = this.questionRepository.create(questionData);
+  async create(createQuestionDto: CreateQuestionDto): Promise<Question> {
+    const newQuestion = this.questionRepository.create(createQuestionDto);
     return this.questionRepository.save(newQuestion);
   }
 
-  async update(id: number, updateQuestionDto: Partial<Question>): Promise<Question> {
+  async update(id: number, updateQuestionDto: UpdateQuestionDto): Promise<Question> {
     const question = await this.questionRepository.findOne({ where: { id } });
     if (!question) {
       throw new NotFoundException(`No question found with ID ${id}`);
