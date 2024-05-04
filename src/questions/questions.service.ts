@@ -46,21 +46,22 @@ export class QuestionsService {
   }
 
   async update(id: number, updateQuestionDto: UpdateQuestionDto): Promise<Question> {
-    const question = await this.questionRepository.findOne({ where: { id }, relations: ['category'] });
+    const { categoryId, ...fieldsToUpdate } = updateQuestionDto;
+
+    // Simultaneously check for the question and category if categoryId is provided.
+    const [question, category] = await Promise.all([
+      this.questionRepository.findOne({ where: { id }, relations: ['category'] }),
+      categoryId ? this.categoryRepository.findOne({ where: { id: categoryId } }) : Promise.resolve(null)
+    ]);
+
     if (!question) {
       throw new NotFoundException(`No question found with ID ${id}`);
     }
-
-    const { categoryId, ...fieldsToUpdate } = updateQuestionDto;
-
-    // Update the category if categoryId is provided in the DTO
-    if (categoryId) {
-      const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
-
-      if (!category) {
-        throw new NotFoundException(`Category with ID ${categoryId} not found`);
-      }
-
+    if (categoryId && !category) {
+      throw new NotFoundException(`Category with ID ${categoryId} not found`);
+    }
+  
+    if (category) {
       question.category = category;
     }
 
