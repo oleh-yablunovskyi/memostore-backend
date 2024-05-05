@@ -5,6 +5,7 @@ import { Question } from './entities/question.entity';
 import { Category } from '../categories/entities/category.entity';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
+import { QuestionsResponseDto } from './dto/questions-response.dto';
 
 @Injectable()
 export class QuestionsService {
@@ -15,8 +16,10 @@ export class QuestionsService {
     private readonly categoryRepository: Repository<Category>,
   ) {}
 
-  async findAll(): Promise<Question[]> {
-    return this.questionRepository.find({ relations: ['category'] });
+  async findAll(): Promise<QuestionsResponseDto> {
+    const [results, count] = await this.questionRepository.findAndCount({ relations: ['category'] });
+
+    return { data: results, count };
   }
 
   async findOne(id: number): Promise<Question> {
@@ -77,15 +80,17 @@ export class QuestionsService {
     }
   }
 
-  async findByCategory(categoryId: number): Promise<Question[]> {
+  async findByCategory(categoryId: number): Promise<QuestionsResponseDto> {
     const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
     if (!category) {
         throw new NotFoundException(`Category with ID ${categoryId} not found`);
     }
 
-    return this.questionRepository.find({
+    const [results, count] = await this.questionRepository.findAndCount({
         where: { category: { id: categoryId } },
         relations: ['category'],
     });
+
+    return { data: results, count };
   }
 }

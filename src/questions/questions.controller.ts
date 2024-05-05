@@ -3,13 +3,14 @@ import { QuestionsService } from './questions.service';
 import { Question } from './entities/question.entity';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
+import { QuestionsResponseDto } from './dto/questions-response.dto';
 
 @Controller('questions')
 export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 
   @Get()
-  async findAll(): Promise<Question[]> {
+  async findAll(): Promise<QuestionsResponseDto> {
     return this.questionsService.findAll();
   }
 
@@ -35,7 +36,7 @@ export class QuestionsController {
   }
 
   @Get('/category/:categoryId')
-  async findByCategory(@Param('categoryId') categoryId: number): Promise<Question[]> {
+  async findByCategory(@Param('categoryId') categoryId: number): Promise<QuestionsResponseDto> {
       return this.questionsService.findByCategory(categoryId);
   }
 }
