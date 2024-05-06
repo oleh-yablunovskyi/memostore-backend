@@ -17,54 +17,44 @@ export class QuestionsService {
     private readonly categoryRepository: Repository<Category>,
   ) {}
 
-  async findAll(page: number, limit: number): Promise<QuestionsResponseDto> {
-    page = Math.max(page, 1); // page must be > 0
-    limit = Math.max(Math.min(limit, MAX_LIMIT), 1); // limit must be between 1 and 100
+  private async findQuestions(options: {
+    page: number;
+    limit: number;
+    where?: any;
+  }): Promise<QuestionsResponseDto> {
+    const { page, limit, where } = options;
+    const adjustedPage = Math.max(page, 1); // page must be > 0
+    const adjustedLimit = Math.max(Math.min(limit, MAX_LIMIT), 1); // limit must be between 1 and MAX_LIMIT
 
     const [results, count] = await this.questionRepository.findAndCount({
+      where,
       relations: ['category'],
-      skip: (page - 1) * limit,
-      take: limit,
+      skip: (adjustedPage - 1) * adjustedLimit,
+      take: adjustedLimit,
     });
 
     const total = count; // total number of items in the database
-    const pageCount = Math.ceil(total / limit); // total number of pages
+    const pageCount = Math.ceil(total / adjustedLimit); // total number of pages
 
     return {
       data: results,
       count: results.length,  // number of items in the current page
       total,
-      page,
+      page: adjustedPage,
       pageCount,
     };
+  }
+
+  async findAll(page: number, limit: number): Promise<QuestionsResponseDto> {
+    return this.findQuestions({ page, limit });
   }
 
   async findByCategory(categoryId: number, page: number, limit: number): Promise<QuestionsResponseDto> {
     const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
     if (!category) {
-        throw new NotFoundException(`Category with ID ${categoryId} not found`);
+      throw new NotFoundException(`Category with ID ${categoryId} not found`);
     }
-
-    page = Math.max(page, 1); // page must be > 0
-    limit = Math.max(Math.min(limit, MAX_LIMIT), 1); // limit must be between 1 and 100
-
-    const [results, count] = await this.questionRepository.findAndCount({
-        where: { category: { id: categoryId } },
-        relations: ['category'],
-        skip: (page - 1) * limit,
-        take: limit,
-    });
-
-    const total = count; // total number of items in the database
-    const pageCount = Math.ceil(total / limit); // total number of pages
-
-    return {
-      data: results,
-      count: results.length,  // number of items in the current page
-      total,
-      page,
-      pageCount,
-    };
+    return this.findQuestions({ page, limit, where: { category: { id: categoryId } } });
   }
 
   async findOne(id: number): Promise<Question> {
