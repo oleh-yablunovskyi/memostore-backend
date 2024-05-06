@@ -6,6 +6,7 @@ import { Category } from '../categories/entities/category.entity';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { QuestionsResponseDto } from './dto/questions-response.dto';
+import { MAX_LIMIT } from './questions.consts';
 
 @Injectable()
 export class QuestionsService {
@@ -16,10 +17,54 @@ export class QuestionsService {
     private readonly categoryRepository: Repository<Category>,
   ) {}
 
-  async findAll(): Promise<QuestionsResponseDto> {
-    const [results, count] = await this.questionRepository.findAndCount({ relations: ['category'] });
+  async findAll(page: number, limit: number): Promise<QuestionsResponseDto> {
+    page = Math.max(page, 1); // page must be > 0
+    limit = Math.max(Math.min(limit, MAX_LIMIT), 1); // limit must be between 1 and 100
 
-    return { data: results, count };
+    const [results, count] = await this.questionRepository.findAndCount({
+      relations: ['category'],
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const total = count; // total number of items in the database
+    const pageCount = Math.ceil(total / limit); // total number of pages
+
+    return {
+      data: results,
+      count: results.length,  // number of items in the current page
+      total,
+      page,
+      pageCount,
+    };
+  }
+
+  async findByCategory(categoryId: number, page: number, limit: number): Promise<QuestionsResponseDto> {
+    const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
+    if (!category) {
+        throw new NotFoundException(`Category with ID ${categoryId} not found`);
+    }
+
+    page = Math.max(page, 1); // page must be > 0
+    limit = Math.max(Math.min(limit, MAX_LIMIT), 1); // limit must be between 1 and 100
+
+    const [results, count] = await this.questionRepository.findAndCount({
+        where: { category: { id: categoryId } },
+        relations: ['category'],
+        skip: (page - 1) * limit,
+        take: limit,
+    });
+
+    const total = count; // total number of items in the database
+    const pageCount = Math.ceil(total / limit); // total number of pages
+
+    return {
+      data: results,
+      count: results.length,  // number of items in the current page
+      total,
+      page,
+      pageCount,
+    };
   }
 
   async findOne(id: number): Promise<Question> {
@@ -78,19 +123,5 @@ export class QuestionsService {
     if (result.affected === 0) {
       throw new NotFoundException(`Question with ID ${id} does not exist`);
     }
-  }
-
-  async findByCategory(categoryId: number): Promise<QuestionsResponseDto> {
-    const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
-    if (!category) {
-        throw new NotFoundException(`Category with ID ${categoryId} not found`);
-    }
-
-    const [results, count] = await this.questionRepository.findAndCount({
-        where: { category: { id: categoryId } },
-        relations: ['category'],
-    });
-
-    return { data: results, count };
   }
 }

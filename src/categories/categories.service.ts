@@ -5,6 +5,7 @@ import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoriesResponseDto } from './dto/categories-response.dto';
+import { MAX_LIMIT } from './categories.consts';
 
 @Injectable()
 export class CategoriesService {
@@ -13,10 +14,26 @@ export class CategoriesService {
     private categoryRepository: Repository<Category>,
   ) {}
 
-  async findAll(): Promise<CategoriesResponseDto> {
-    const [results, count] = await this.categoryRepository.findAndCount({ relations: ['questions'] });
+  async findAll(page: number, limit: number): Promise<CategoriesResponseDto> {
+    page = Math.max(page, 1); // page must be > 0
+    limit = Math.max(Math.min(limit, MAX_LIMIT), 1); // limit must be between 1 and 100
 
-    return { data: results, count };
+    const [results, count] = await this.categoryRepository.findAndCount({
+      relations: ['questions'],
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const total = count; // total number of items in the database
+    const pageCount = Math.ceil(total / limit); // total number of pages
+
+    return {
+      data: results,
+      count: results.length,  // number of items in the current page
+      total,
+      page,
+      pageCount,
+    };
   }
 
   async findOne(id: number): Promise<Category> {
