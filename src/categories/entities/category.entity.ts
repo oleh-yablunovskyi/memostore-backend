@@ -1,17 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, OneToMany } from 'typeorm';
 import { Question } from '../../questions/entities/question.entity';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity()
-export class Category {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @CreateDateColumn({ type: 'timestamp' })
-  createdDate: Date;
-
-  @UpdateDateColumn({ type: 'timestamp' })
-  updatedDate: Date;
-
+export class Category extends BaseEntity {
   @Column()
   name: string;
 

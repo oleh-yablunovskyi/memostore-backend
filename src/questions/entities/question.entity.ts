@@ -1,17 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, ManyToOne } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity()
-export class Question {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @CreateDateColumn({ type: 'timestamp' })
-  createdDate: Date;
-
-  @UpdateDateColumn({ type: 'timestamp' })
-  updatedDate: Date;
-
+export class Question extends BaseEntity {
   @Column()
   title: string;
 
