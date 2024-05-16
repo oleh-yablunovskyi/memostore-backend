@@ -19,9 +19,10 @@ export class CategoriesService {
     limit = Math.max(Math.min(limit, MAX_LIMIT), 1); // limit must be between 1 and 100
 
     const [results, count] = await this.categoryRepository.findAndCount({
-      relations: ['questions'],
       skip: (page - 1) * limit,
       take: limit,
+      order: { createdDate: 'DESC' },
+      relations: ['questions'],
     });
 
     const total = count; // total number of items in the database

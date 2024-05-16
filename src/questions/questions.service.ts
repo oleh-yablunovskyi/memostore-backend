@@ -20,17 +20,19 @@ export class QuestionsService {
   private async findQuestions(options: {
     page: number;
     limit: number;
+    order?: { [key: string]: 'ASC' | 'DESC' };
     where?: any;
   }): Promise<QuestionsResponseDto> {
-    const { page, limit, where } = options;
+    const { page, limit, where, order } = options;
     const adjustedPage = Math.max(page, 1); // page must be > 0
     const adjustedLimit = Math.max(Math.min(limit, MAX_LIMIT), 1); // limit must be between 1 and MAX_LIMIT
 
     const [results, count] = await this.questionRepository.findAndCount({
-      where,
-      relations: ['category'],
       skip: (adjustedPage - 1) * adjustedLimit,
       take: adjustedLimit,
+      order: order || { createdDate: 'DESC' },
+      where,
+      relations: ['category'],
     });
 
     const total = count; // total number of items in the database
