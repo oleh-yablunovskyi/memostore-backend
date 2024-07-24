@@ -14,6 +14,8 @@ async function bootstrap() {
     forbidNonWhitelisted: true, // Throw an error if unknown properties are present in incoming payloads
   }));
 
-  await app.listen(3001);
+  const port = process.env.DATABASE_PORT || 3001;
+  await app.listen(port);
+  console.log(`Application is running on port ${port}`);
 }
 bootstrap();
