@@ -4,19 +4,25 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Category } from '../categories/entities/category.entity';
 import { Question } from '../questions/entities/question.entity';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'test',
-      database: 'postgres',
+      host: process.env.DATABASE_HOST,
+      port: parseInt(process.env.DATABASE_PORT, 10),
+      username: process.env.DATABASE_USERNAME,
+      password: process.env.DATABASE_PASSWORD,
+      database: process.env.DATABASE_NAME,
       entities: [Category, Question],
       synchronize: true,  // note: set to false in production!
-      logging: ["error"]
+      logging: ["error"],
+      ssl: {
+        rejectUnauthorized: false
+      },
     }),
     TypeOrmModule.forFeature([Category, Question]),
   ],
