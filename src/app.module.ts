@@ -35,7 +35,7 @@ function getSSLConfig(env: string) {
         logging: ["error"],
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         ssl: getSSLConfig(process.env.SERVER_MODE),
-        synchronize: true, // note: set to false in production!
+        synchronize: false, // note: set to false in production!
       }),
       inject: [ConfigService],
     }),
