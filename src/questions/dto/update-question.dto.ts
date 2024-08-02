@@ -1,4 +1,4 @@
-import { IsOptional, IsNotEmpty, IsString, IsInt } from 'class-validator';
+import { IsOptional, IsNotEmpty, IsString, IsInt, IsArray } from 'class-validator';
 
 export class UpdateQuestionDto {
   @IsOptional()
@@ -15,4 +15,9 @@ export class UpdateQuestionDto {
   @IsNotEmpty({ message: 'Category ID must not be empty' })
   @IsInt({ message: 'Category ID must be an integer' })
   categoryId?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true, message: 'Each tag ID must be an integer' })
+  tagIds?: number[];
 }
