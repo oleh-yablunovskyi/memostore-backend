@@ -8,7 +8,6 @@ export class UpdateQuestionDto {
 
   @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'Content must not be empty' })
   content?: string;
 
   @IsOptional()

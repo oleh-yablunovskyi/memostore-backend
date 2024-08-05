@@ -5,7 +5,6 @@ export class CreateQuestionDto {
   @IsString()
   title: string;
 
-  @IsNotEmpty({ message: 'Content must not be empty' })
   @IsString()
   content: string;
 
