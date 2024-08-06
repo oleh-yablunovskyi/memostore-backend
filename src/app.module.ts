@@ -6,18 +6,7 @@ import { AppService } from './app.service';
 import { QuestionsModule } from './questions/questions.module';
 import { CategoriesModule } from './categories/categories.module';
 import { TagsModule } from './tags/tags.module';
-
-function getSSLConfig(env: string) {
-  const configs = {
-    production: { require: true, rejectUnauthorized: true },
-    deploy: { require: true, rejectUnauthorized: false },
-    local: false,
-  };
-  if (!configs[env] === undefined) {
-    throw new Error('Set network in your .env file');
-  }
-  return configs[env];
-}
+import { getSSLConfig } from './common/utils/ssl-config.util';
 
 @Module({
   imports: [

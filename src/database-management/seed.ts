@@ -1,10 +1,12 @@
+import * as dotenv from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { DatabaseManagementService } from './database-management.service';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Category } from '../categories/entities/category.entity';
 import { Question } from '../questions/entities/question.entity';
-import * as dotenv from 'dotenv';
+import { Tag } from '../tags/entities/tag.entity';
+import { getSSLConfig } from '../common/utils/ssl-config.util';
 
 dotenv.config();
 
@@ -17,14 +19,12 @@ dotenv.config();
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [Category, Question],
-      synchronize: true,  // note: set to false in production!
+      entities: [Category, Question, Tag,],
+      synchronize: false,  // note: set to false in production!
       logging: ["error"],
-      ssl: {
-        rejectUnauthorized: false
-      },
+      ssl: getSSLConfig(process.env.SERVER_MODE),
     }),
-    TypeOrmModule.forFeature([Category, Question]),
+    TypeOrmModule.forFeature([Category, Question, Tag,]),
   ],
   providers: [DatabaseManagementService],
 })
@@ -34,7 +34,10 @@ async function seedDatabase() {
   const app = await NestFactory.createApplicationContext(SeedAppModule);
   const seedService = app.get(DatabaseManagementService);
 
-  await seedService.createOtherCategory();
+  await seedService.seedCategories();
+  await seedService.assignQuestionsToDefaultCategory();
+  await seedService.seedTags();
+
   console.log('Seeding complete!');
 
   await app.close();
