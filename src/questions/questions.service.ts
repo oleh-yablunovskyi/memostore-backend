@@ -103,10 +103,9 @@ export class QuestionsService {
   async update(id: number, updateQuestionDto: UpdateQuestionDto): Promise<Question> {
     const { categoryId, tagIds, ...fieldsToUpdate } = updateQuestionDto;
 
-    // Simultaneously check for the question and category if categoryId is provided.
     const [question, category, tags] = await Promise.all([
       this.questionRepository.findOne({ where: { id }, relations: ['category', 'tags'] }),
-      categoryId ? this.categoryRepository.findOne({ where: { id: categoryId } }) : Promise.resolve(null),
+      categoryId ? this.categoryRepository.findOne({ where: { id: categoryId }, relations: ['children'] }) : Promise.resolve(null),
       tagIds ? this.tagRepository.findByIds(tagIds) : Promise.resolve(null),
     ]);
   
@@ -116,10 +115,13 @@ export class QuestionsService {
     if (categoryId && !category) {
       throw new NotFoundException(`Category with ID ${categoryId} not found`);
     }
+    if (category && category.children && category.children.length > 0) {
+      throw new BadRequestException(`Cannot attach a question to a category that has child categories (subcategories).`);
+    }
     if (tagIds && tags.length !== tagIds.length) {
       throw new NotFoundException(`One or more tags not found`);
     }
-  
+
     if (category) {
       question.category = category;
     }
