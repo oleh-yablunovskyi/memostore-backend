@@ -22,15 +22,20 @@ export class CategoriesService {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdDate: 'DESC' },
-      relations: ['questions'],
+      relations: ['parent'],
     });
-
+  
+    // Load nested parents for each category
+    const categoriesWithNestedParents = await Promise.all(
+      results.map(category => this.loadNestedParents(category))
+    );
+  
     const total = count; // total number of items in the database
     const pageCount = Math.ceil(total / limit); // total number of pages
-
+  
     return {
-      data: results,
-      count: results.length,  // number of items in the current page
+      data: categoriesWithNestedParents,
+      count: categoriesWithNestedParents.length,  // number of items in the current page
       total,
       page,
       pageCount,
@@ -40,16 +45,30 @@ export class CategoriesService {
   async findOne(id: number): Promise<Category> {
     const category = await this.categoryRepository.findOne({
       where: { id },
-      relations: ['questions'],
+      relations: ['questions', 'parent', 'children'],
     });
     if (!category) {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
-    return category;
+
+    const categoryWithNestedParents = await this.loadNestedParents(category);
+
+    return categoryWithNestedParents;
   }
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
-    const newCategory = this.categoryRepository.create(createCategoryDto);
+    const { name, parentId } = createCategoryDto;
+
+    const newCategory = this.categoryRepository.create({ name });
+
+    if (parentId) {
+      const parentCategory = await this.categoryRepository.findOne({ where: { id: parentId } });
+      if (!parentCategory) {
+        throw new Error('Parent category not found');
+      }
+      newCategory.parent = parentCategory;
+    }
+
     return this.categoryRepository.save(newCategory);
   }
 
@@ -67,5 +86,20 @@ export class CategoriesService {
     if (result.affected === 0) {
       throw new NotFoundException(`Category with ID ${id} does not exist`);
     }
+  }
+
+  private async loadNestedParents(category: Category): Promise<Category> {
+    const cloneCategory = { ...category };
+
+    if (cloneCategory.parent) {
+      const parentCategory = await this.categoryRepository.findOne({
+        where: { id: cloneCategory.parent.id },
+        relations: ['parent'],
+      });
+  
+      cloneCategory.parent = await this.loadNestedParents(parentCategory);
+    }
+  
+    return cloneCategory;
   }
 }

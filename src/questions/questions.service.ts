@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Question } from './entities/question.entity';
@@ -74,9 +74,15 @@ export class QuestionsService {
   }
 
   async create(createQuestionDto: CreateQuestionDto): Promise<Question> {
-    const category = await this.categoryRepository.findOne({ where: { id: createQuestionDto.categoryId } });
+    const category = await this.categoryRepository.findOne({
+      where: { id: createQuestionDto.categoryId },
+      relations: ['children'],
+    });
     if (!category) {
       throw new NotFoundException(`Category with ID ${createQuestionDto.categoryId} not found`);
+    }
+    if (category.children && category.children.length > 0) {
+      throw new BadRequestException(`Cannot attach a question to a category that has child categories (subcategories).`);
     }
   
     const tags = await this.tagRepository.findByIds(createQuestionDto.tagIds);
