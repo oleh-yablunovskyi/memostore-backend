@@ -4,7 +4,7 @@ import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity()
 export class Tag extends BaseEntity {
-  @Column()
+  @Column({ unique: true })
   name: string;
 
   @ManyToMany(() => Question, question => question.tags)
