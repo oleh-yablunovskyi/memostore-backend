@@ -22,7 +22,7 @@ export class CategoriesService {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdDate: 'DESC' },
-      relations: ['parent'],
+      relations: ['parent', 'children'],
     });
   
     // Load nested parents for each category
