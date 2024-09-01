@@ -1,4 +1,4 @@
-import { IsOptional, IsNotEmpty, IsString, IsInt } from 'class-validator';
+import { IsOptional, IsNotEmpty, IsString, IsInt, ValidateIf } from 'class-validator';
 
 export class UpdateCategoryDto {
   @IsOptional()
@@ -7,6 +7,7 @@ export class UpdateCategoryDto {
   name?: string;
 
   @IsOptional()
-  @IsInt()
-  parentId?: number;
+  @ValidateIf((o) => o.parentId !== null)
+  @IsInt({ message: 'Parent ID must be an integer or null' })
+  parentId?: number | null;
 }
