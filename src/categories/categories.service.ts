@@ -21,7 +21,7 @@ export class CategoriesService {
     const [results, count] = await this.categoryRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
-      order: { createdDate: 'DESC' },
+      order: { createdDate: 'ASC' },
       relations: ['parent', 'children'],
     });
   
