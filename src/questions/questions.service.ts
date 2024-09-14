@@ -81,10 +81,7 @@ export class QuestionsService {
     if (!category) {
       throw new NotFoundException(`Category with ID ${createQuestionDto.categoryId} not found`);
     }
-    if (category.children && category.children.length > 0) {
-      throw new BadRequestException(`Cannot attach a question to a category that has child categories (subcategories).`);
-    }
-  
+
     const tags = await this.tagRepository.findBy({ id: In(createQuestionDto.tagIds) });
     if (tags.length !== createQuestionDto.tagIds.length) {
       throw new NotFoundException(`One or more tags not found`);
@@ -114,9 +111,6 @@ export class QuestionsService {
     }
     if (categoryId && !category) {
       throw new NotFoundException(`Category with ID ${categoryId} not found`);
-    }
-    if (category && category.children && category.children.length > 0) {
-      throw new BadRequestException(`Cannot attach a question to a category that has child categories (subcategories).`);
     }
     if (tagIds && tags.length !== tagIds.length) {
       throw new NotFoundException(`One or more tags not found`);
