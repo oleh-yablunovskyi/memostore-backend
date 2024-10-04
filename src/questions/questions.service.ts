@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, ILike } from 'typeorm';
 import { Question } from './entities/question.entity';
 import { Category } from '../categories/entities/category.entity';
 import { Tag } from '../tags/entities/tag.entity';
@@ -20,46 +20,47 @@ export class QuestionsService {
     private readonly tagRepository: Repository<Tag>,
   ) {}
 
-  private async findQuestions(options: {
-    page: number;
-    limit: number;
-    order?: { [key: string]: 'ASC' | 'DESC' };
-    where?: any;
-  }): Promise<QuestionsResponseDto> {
-    const { page, limit, where, order } = options;
-    const adjustedPage = Math.max(page, 1); // page must be > 0
-    const adjustedLimit = Math.max(Math.min(limit, MAX_LIMIT), 1); // limit must be between 1 and MAX_LIMIT
+  async findAll(
+    page: number,
+    limit: number,
+    search?: string,
+    categoryId?: number,
+  ): Promise<QuestionsResponseDto> {
+    const adjustedPage = Math.max(page, 1);
+    const adjustedLimit = Math.max(Math.min(limit, MAX_LIMIT), 1);
+
+    const where: any = {};
+
+    if (search) {
+      where.title = ILike(`%${search}%`);
+    }
+
+    if (categoryId) {
+      const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
+      if (!category) {
+        throw new NotFoundException(`Category with ID ${categoryId} not found`);
+      }
+      where.category = { id: categoryId };
+    }
 
     const [results, count] = await this.questionRepository.findAndCount({
       skip: (adjustedPage - 1) * adjustedLimit,
       take: adjustedLimit,
-      order: order || { createdDate: 'DESC' },
+      order: { createdDate: 'DESC' },
       where,
       relations: ['category', 'tags'],
     });
 
-    const total = count; // total number of items in the database
-    const pageCount = Math.ceil(total / adjustedLimit); // total number of pages
+    const total = count;
+    const pageCount = Math.ceil(total / adjustedLimit);
 
     return {
       data: results,
-      count: results.length,  // number of items in the current page
+      count: results.length,
       total,
       page: adjustedPage,
       pageCount,
     };
-  }
-
-  async findAll(page: number, limit: number): Promise<QuestionsResponseDto> {
-    return this.findQuestions({ page, limit });
-  }
-
-  async findByCategory(categoryId: number, page: number, limit: number): Promise<QuestionsResponseDto> {
-    const category = await this.categoryRepository.findOne({ where: { id: categoryId } });
-    if (!category) {
-      throw new NotFoundException(`Category with ID ${categoryId} not found`);
-    }
-    return this.findQuestions({ page, limit, where: { category: { id: categoryId } } });
   }
 
   async findOne(id: number): Promise<Question> {
@@ -86,7 +87,7 @@ export class QuestionsService {
     if (tags.length !== createQuestionDto.tagIds.length) {
       throw new NotFoundException(`One or more tags not found`);
     }
-  
+
     const newQuestion = this.questionRepository.create({
       title: createQuestionDto.title,
       content: createQuestionDto.content,
@@ -105,7 +106,7 @@ export class QuestionsService {
       categoryId ? this.categoryRepository.findOne({ where: { id: categoryId }, relations: ['children'] }) : Promise.resolve(null),
       tagIds ? this.tagRepository.findBy({ id: In(tagIds) }) : Promise.resolve(null),
     ]);
-  
+
     if (!question) {
       throw new NotFoundException(`No question found with ID ${id}`);
     }
@@ -122,7 +123,7 @@ export class QuestionsService {
     if (tags) {
       question.tags = tags;
     }
-  
+
     Object.assign(question, fieldsToUpdate);
 
     return this.questionRepository.save(question);

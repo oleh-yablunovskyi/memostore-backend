@@ -1,6 +1,10 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, HttpCode, HttpStatus, Query, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller, Get, Post, Body, Param, Patch,
+  Delete, HttpCode, HttpStatus, Query,
+} from '@nestjs/common';
 import { QuestionsService } from './questions.service';
 import { Question } from './entities/question.entity';
+import { FindAllQueryDto } from './dto/find-all-query.dto';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { QuestionsResponseDto } from './dto/questions-response.dto';
@@ -12,19 +16,15 @@ export class QuestionsController {
 
   @Get()
   async findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(DEFAULT_LIMIT), ParseIntPipe) limit: number,
+    @Query() query: FindAllQueryDto,
   ): Promise<QuestionsResponseDto> {
-    return this.questionsService.findAll(page, limit);
-  }
-
-  @Get('/category/:categoryId')
-  async findByCategory(
-    @Param('categoryId') categoryId: number,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(DEFAULT_LIMIT), ParseIntPipe) limit: number,
-  ): Promise<QuestionsResponseDto> {
-    return this.questionsService.findByCategory(categoryId, page, limit);
+    const {
+      page = 1,
+      limit = DEFAULT_LIMIT,
+      search,
+      categoryId = 0,
+    } = query;
+    return this.questionsService.findAll(page, limit, search, categoryId);
   }
 
   @Get(':id')
