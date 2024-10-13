@@ -46,7 +46,7 @@ export class QuestionsService {
     const [results, count] = await this.questionRepository.findAndCount({
       skip: (adjustedPage - 1) * adjustedLimit,
       take: adjustedLimit,
-      order: { createdDate: 'DESC' },
+      order: { createdDate: 'ASC' },
       where,
       relations: ['category', 'tags'],
     });
